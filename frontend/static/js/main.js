@@ -1,7 +1,79 @@
-// import Dashboard from "./views/Dashboard.js";
-// import Posts from "./views/Posts.js";
-// import PostView from "./views/PostView.js";
-// import Settings from "./views/Settings.js";
+class AbstractView {
+  constructor(params) {
+    this.params = params;
+  }
+
+  setTitle(title) {
+    document.title = title;
+  }
+
+  async getHtml() {
+    return "";
+  }
+}
+
+class Dashboard extends AbstractView {
+  constructor(params) {
+    super(params);
+    this.setTitle("Dashboard");
+  }
+
+  async getHtml() {
+    return `
+      <h1>Welcome back, Dom</h1>
+      <p>
+        Fugiat voluptate et nisi Lorem cillum anim sit do eiusmod occaecat irure do. Reprehenderit anim fugiat sint exercitation consequat. Sit anim laborum sit amet Lorem adipisicing ullamco duis. Anim in do magna ea pariatur et.
+      </p>
+      <p>
+        <a href="/posts" data-link>View recent posts</a>.
+      </p>
+    `;
+  }
+}
+
+class Posts extends AbstractView {
+  constructor(params) {
+    super(params);
+    this.setTitle("Posts");
+  }
+
+  async getHtml() {
+    return `
+      <h1>Posts</h1>
+      <p>You are viewing the posts!</p>
+    `;
+  }
+}
+
+class PostView extends AbstractView {
+  constructor(params) {
+    super(params);
+    this.postId = params.id;
+    this.setTitle("Viewing Post");
+  }
+
+  async getHtml() {
+    return `
+      <h1>Post</h1>
+      <p>You are viewing post #${this.postId}.</p>
+    `;
+  }
+}
+
+class Settings extends AbstractView {
+  constructor(params) {
+    super(params);
+    this.setTitle("Settings");
+  }
+
+  async getHtml() {
+    return `
+      <h1>Settings</h1>
+      <p>Manage your privacy and configuration.</p>
+    `;
+  }
+}
+
 
 const pathToRegex = path => new RegExp("^" + path.replace(/\//g, "\\/").replace(/:\w+/g, "(.+)") + "$");
 
@@ -20,11 +92,6 @@ const navigateTo = url => {
 };
 
 const router = async () => {
-
-  const Dashboard = import('./views/Dashboard.js');
-  const Posts = import('./views/Posts.js');
-  const PostView = import('./views/PostView.js');
-  const Settings = import('./views/Settings.js');
 
   const routes = [
     { path: "/", view: Dashboard },
