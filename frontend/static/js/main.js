@@ -1,7 +1,7 @@
-import Dashboard from "./views/Dashboard.js";
-import Posts from "./views/Posts.js";
-import PostView from "./views/PostView.js";
-import Settings from "./views/Settings.js";
+// import Dashboard from "./views/Dashboard.js";
+// import Posts from "./views/Posts.js";
+// import PostView from "./views/PostView.js";
+// import Settings from "./views/Settings.js";
 
 const pathToRegex = path => new RegExp("^" + path.replace(/\//g, "\\/").replace(/:\w+/g, "(.+)") + "$");
 
@@ -20,6 +20,12 @@ const navigateTo = url => {
 };
 
 const router = async () => {
+
+  const Dashboard = import('./views/Dashboard.js');
+  const Posts = import('./views/Posts.js');
+  const PostView = import('./views/PostView.js');
+  const Settings = import('./views/Settings.js');
+
   const routes = [
     { path: "/", view: Dashboard },
     { path: "/posts", view: Posts },
