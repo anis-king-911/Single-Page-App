@@ -1,4 +1,4 @@
-let mangaList, recentManga, url = '/frontend/static/data/manga4up-vercel-default-rtdb-export.json';
+let mangaList, recentManga, url = '/static/data/manga4up-vercel-default-rtdb-export.json';
 
 function getJSON(url, callback) {
   const xhr = new XMLHttpRequest();
