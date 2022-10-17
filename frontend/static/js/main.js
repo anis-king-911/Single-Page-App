@@ -1,3 +1,61 @@
+let mangaList, recentManga, url = '/frontend/static/data/manga4up-vercel-default-rtdb-export.json';
+
+function getJSON(url, callback) {
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.responseType = 'json';
+  xhr.onload = () => {
+    const status = xhr.status;
+    if (status === 200) {
+      callback(null, xhr.response);
+    } else {
+      callback(status, xhr.response);
+    }
+  };
+  xhr.send();
+}
+
+const listItem = (props) => {
+  const {
+    Title, Cover, Count
+  } = props;
+  
+  return `
+  <article>
+    <div class="Cover">
+      <img src="${Cover}" alt="${Title}" />
+    </div>
+    <div class="Info">
+      <a href="/posts/${Title.replaceAll(' ', '_')}" data-link>
+        ${Title}: ${Count}
+      </a>
+    </div>
+  </article>
+  `;
+}
+const recentItem = (props) => {
+  return `
+  <article>
+    <div class="Cover">
+      <img src="${props['Volume Cover']}" alt="${props['Manga Title']}" />
+    </div>
+    <div class="Info">
+      ${props['Manga Title']}: ${props['Volume Number']}
+      <button>Download Links</button>
+    </div>
+  </article>
+  `;
+}
+
+getJSON(url, (error, fileContent) => {
+  const snapshot = error ? error : fileContent;
+  const listLimit = Object.entries(snapshot['List']).reverse();
+  const recentLimit = Object.entries(snapshot['Manga4Up']).reverse().splice(0, 20);
+  
+  recentManga = recentLimit;
+  mangaList = listLimit;
+})
+
 class AbstractView {
   constructor(params) {
     this.params = params;
@@ -11,65 +69,83 @@ class AbstractView {
     return "";
   }
 }
-
-class Dashboard extends AbstractView {
+class Home extends AbstractView {
   constructor(params) {
     super(params);
-    this.setTitle("Dashboard");
+    this.setTitle("Home");
   }
 
   async getHtml() {
     return `
-      <h1>Welcome back, Dom</h1>
+      <h1>Manga4Up</h1>
+      <p>Manga4Up Version Single Page Application</p>
       <p>
-        Fugiat voluptate et nisi Lorem cillum anim sit do eiusmod occaecat irure do. Reprehenderit anim fugiat sint exercitation consequat. Sit anim laborum sit amet Lorem adipisicing ullamco duis. Anim in do magna ea pariatur et.
-      </p>
-      <p>
-        <a href="/posts" data-link>View recent posts</a>.
+        <a href="/posts" data-link>View Manga List</a>.
       </p>
     `;
   }
 }
-
-class Posts extends AbstractView {
+class Manga extends AbstractView {
   constructor(params) {
     super(params);
-    this.setTitle("Posts");
+    this.setTitle("Manga");
   }
-
+  
   async getHtml() {
     return `
-      <h1>Posts</h1>
+      <h1>Manga</h1>
       <p>You are viewing the posts!</p>
+      
+      <div class="Container">
+        ${mangaList.map(([key, data]) => listItem(data)).join('')}
+      </div>
     `;
   }
 }
-
-class PostView extends AbstractView {
+class MangaView extends AbstractView {
   constructor(params) {
     super(params);
     this.postId = params.id;
-    this.setTitle("Viewing Post");
+    this.setTitle("Viewing Manga");
   }
 
   async getHtml() {
     return `
       <h1>Post</h1>
-      <p>You are viewing post #${this.postId}.</p>
+      <p>You are viewing post ${this.postId.replaceAll('_', ' ')}.</p>
+      
+      ${
+      mangaList.map(([key, data]) => {
+        if(this.postId.replaceAll('_', ' ') === data['Title']) {
+          return `
+        
+        ${data['Title']}: ${data['Count']} <br />
+        Manga State: ${data['State']}
+        
+          `;
+        }
+      }).join('')
+      }
     `;
   }
 }
-
-class Settings extends AbstractView {
+class Recent extends AbstractView {
   constructor(params) {
     super(params);
-    this.setTitle("Settings");
+    this.setTitle("Recent");
   }
 
   async getHtml() {
     return `
-      <h1>Settings</h1>
+      <h1>Recent</h1>
       <p>Manage your privacy and configuration.</p>
+      
+      <div class="Container">
+      ${recentManga.map(([key, snap]) => {
+        const data = snap['Volume Data']
+        return recentItem(data);
+      }).join('')}
+      </div>
     `;
   }
 }
@@ -92,14 +168,13 @@ const navigateTo = url => {
 };
 
 const router = async () => {
-
   const routes = [
-    { path: "/", view: Dashboard },
-    { path: "/posts", view: Posts },
-    { path: "/posts/:id", view: PostView },
-    { path: "/settings", view: Settings }
-    ];
-
+    { path: "/", view: Home },
+    { path: "/posts", view: Manga },
+    { path: "/posts/:id", view: MangaView },
+    { path: "/recent", view: Recent }
+  ];
+  
   // Test each route for potential match
   const potentialMatches = routes.map(route => {
     return {
@@ -118,7 +193,7 @@ const router = async () => {
   }
 
   const view = new match.route.view(getParams(match));
-  
+
   document.querySelector("#app").innerHTML = await view.getHtml();
 }; // router end 
 
@@ -132,5 +207,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  router();
+  router()
 });
+
+
+let interval = setInterval(() => {
+  /*
+  if(mangaList !== null) {
+    clearInterval(interval);
+  } else {
+    console.log(null);
+  }
+  */
+  mangaList ? clearInterval(interval) : console.log(null);
+}, 100);

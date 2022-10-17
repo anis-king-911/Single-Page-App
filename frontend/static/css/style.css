@@ -1,0 +1,56 @@
+* {
+  box-sizing: border-box;
+  font-family: 'Quicksand', sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  width: 100%;
+  height: 50px;
+  background: #222222;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+header a {
+  display: block;
+  padding: 12px 18px;
+  text-decoration: none;
+  color: #eeeeee;
+  font-weight: 500;
+}
+
+header a:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+#app {
+  margin: 2em;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+a {
+  color: #009579;
+}
+
+.Container {
+  display: grid;
+  grid-gap: 4px;
+  padding: 4px;
+  grid-template-columns: repeat(2, 1fr);
+}
+.Container .Cover {
+  
+}
+.Container .Cover img {
+  width: 100%;
+}
+.Container .Info {
+  font-size: 14px;
+}
