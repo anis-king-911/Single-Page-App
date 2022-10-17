@@ -207,17 +207,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  router()
+  setTimeout(() => {router()}, 1000);
 });
 
 
-let interval = setInterval(() => {
-  /*
-  if(mangaList !== null) {
-    clearInterval(interval);
-  } else {
-    console.log(null);
-  }
-  */
-  mangaList ? clearInterval(interval) : console.log(null);
-}, 100);
+// let interval = setInterval(() => {
+//   if(mangaList !== null) {
+//     clearInterval(interval);
+//   } else {
+//     console.log(null);
+//   }
+//   mangaList ? clearInterval(interval) : console.log(null);
+// }, 100);
