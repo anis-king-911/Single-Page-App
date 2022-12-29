@@ -1,4 +1,4 @@
-let mangaList, recentManga, url = '/static/data/manga4up-vercel-default-rtdb-export.json';
+let mangaList, recentManga, url = './static/data/newData.json';
 
 function getJSON(url, callback) {
   const xhr = new XMLHttpRequest();
@@ -15,45 +15,51 @@ function getJSON(url, callback) {
   xhr.send();
 }
 
-const listItem = (props) => {
-  const {
-    Title, Cover, Count
-  } = props;
-  
+const listItem = ({ ID, Title, Cover, Count, Type, State }) => {
   return `
-  <article>
-    <div class="Cover">
-      <img src="${Cover}" alt="${Title}" />
-    </div>
-    <div class="Info">
-      <a href="/posts/${Title.replaceAll(' ', '_')}" data-link>
-        ${Title}: ${Count}
-      </a>
-    </div>
-  </article>
-  `;
-}
-const recentItem = (props) => {
-  return `
-  <article>
-    <div class="Cover">
-      <img src="${props['Volume Cover']}" alt="${props['Manga Title']}" />
-    </div>
-    <div class="Info">
-      ${props['Manga Title']}: ${props['Volume Number']}
-      <button>Download Links</button>
-    </div>
-  </article>
+<article>
+  <div class="ID">${ID.toLocaleString('en-US',{minimumIntegerDigits: 2})}</div>
+  <div class="Cover">
+    <img src="${Cover}" alt="${Title}"/> 
+  </div>
+  <div class="Info">
+    <a class="Title" href="/posts/${Title.replaceAll(' ', '_')}" data-link>
+      ${Title}: ${Count}
+    </a>
+    <p>Type: <span>${Type}</span></p>
+    <p>State: <span>${State}</span></p>
+  </div>
+</article>
   `;
 }
 
-getJSON(url, (error, fileContent) => {
-  const snapshot = error ? error : fileContent;
-  const listLimit = Object.entries(snapshot['List']).reverse();
-  const recentLimit = Object.entries(snapshot['Manga4Up']).reverse().splice(0, 20);
+const recentItem = ({ ID, Title, Cover, Number, Type, CreatedAt }) => {
+  return `
+<article>
+  <div class="ID">${ID.toLocaleString('en-US',{minimumIntegerDigits: 3})}</div>
+  <div class="Cover">
+    <img src="${Cover}" alt="${Title}"/> 
+  </div>
+  <div class="Info">
+    <p class="Title">${Title}: ${Number}</p>
+    <p>Type: <span>${Type}</span></p>
+    <p>Created At: <span>${CreatedAt}</span></p>
+  </div>
+</article>
+  `;
+}
+
+getJSON(url, async (error, fileContent) => {
+  if(error) {
+    console.log(error);
+    return
+  }
   
-  recentManga = recentLimit;
-  mangaList = listLimit;
+  const listSnapshot = await Object.values(fileContent['List']);
+  const recentSnapshot = await Object.values(fileContent['Manga4Up']);
+  
+  mangaList = listSnapshot;
+  recentManga = recentSnapshot;
 })
 
 class AbstractView {
@@ -69,6 +75,7 @@ class AbstractView {
     return "";
   }
 }
+
 class Home extends AbstractView {
   constructor(params) {
     super(params);
@@ -78,13 +85,15 @@ class Home extends AbstractView {
   async getHtml() {
     return `
       <h1>Manga4Up</h1>
-      <p>Manga4Up Version Single Page Application</p>
+      <p>Manga4Up version local data single page application</p>
       <p>
-        <a href="/posts" data-link>View Manga List</a>.
+        <a href="/posts" data-link>View Manga List</a> <br />
+        <a href="/recent" data-link>View recent add</a>.
       </p>
     `;
   }
 }
+
 class Manga extends AbstractView {
   constructor(params) {
     super(params);
@@ -97,11 +106,12 @@ class Manga extends AbstractView {
       <p>You are viewing the posts!</p>
       
       <div class="Container">
-        ${mangaList.map(([key, data]) => listItem(data)).join('')}
+        ${mangaList.reverse().map(data => listItem(data)).join('')}
       </div>
     `;
   }
 }
+
 class MangaView extends AbstractView {
   constructor(params) {
     super(params);
@@ -115,12 +125,12 @@ class MangaView extends AbstractView {
       <p>You are viewing post ${this.postId.replaceAll('_', ' ')}.</p>
       
       ${
-      mangaList.map(([key, data]) => {
-        if(this.postId.replaceAll('_', ' ') === data['Title']) {
+      mangaList.map(({Title, Count, State}) => {
+        if(this.postId.replaceAll('_', ' ') === Title) {
           return `
         
-        ${data['Title']}: ${data['Count']} <br />
-        Manga State: ${data['State']}
+        ${Title}: ${Count} <br />
+        Manga State: ${State}
         
           `;
         }
@@ -129,6 +139,7 @@ class MangaView extends AbstractView {
     `;
   }
 }
+
 class Recent extends AbstractView {
   constructor(params) {
     super(params);
@@ -141,22 +152,20 @@ class Recent extends AbstractView {
       <p>Manage your privacy and configuration.</p>
       
       <div class="Container">
-      ${recentManga.map(([key, snap]) => {
-        const data = snap['Volume Data']
-        return recentItem(data);
-      }).join('')}
+      ${recentManga.reverse().splice(0, 20).map(data => recentItem(data)).join('')}
       </div>
     `;
   }
 }
 
+//////////////////////////////////////////////////////
 
 const pathToRegex = path => new RegExp("^" + path.replace(/\//g, "\\/").replace(/:\w+/g, "(.+)") + "$");
 
 const getParams = match => {
   const values = match.result.slice(1);
   const keys = Array.from(match.route.path.matchAll(/:(\w+)/g)).map(result => result[1]);
-
+  
   return Object.fromEntries(keys.map((key, i) => {
     return [key, values[i]];
   }));
@@ -205,17 +214,9 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       navigateTo(e.target.href);
     }
+    
+    console.log(window.location.href);
   });
 
   setTimeout(() => {router()}, 1000);
 });
-
-
-// let interval = setInterval(() => {
-//   if(mangaList !== null) {
-//     clearInterval(interval);
-//   } else {
-//     console.log(null);
-//   }
-//   mangaList ? clearInterval(interval) : console.log(null);
-// }, 100);
